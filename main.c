@@ -6,7 +6,7 @@
  * Note: This implementation does not aim to be optimal. There
  * are better ways to code an avl tree's insertion and deletion
  * algorithm, but we will not go there.
-*/
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 /*
  * This array should only contain unique, positive non-zero 
  * integers.
-*/
+ */
 int keys[] = {2,8,23,4,5,1,19,11};
 
 int keys_length = sizeof(keys)/sizeof(keys[0]); /* Length of keys array */
