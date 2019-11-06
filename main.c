@@ -8,8 +8,16 @@
  * algorithm, but we will not go there.
  */
 
+
+// TODO:
+// Deletion
+// Update
+// Check duplicate keys and range of keys
+
 #include <stdio.h>
 #include <stdlib.h>
+
+#define max(x, y) (x >= y ? x : y) /* Expression to get max */
 
 /*
  * This array should only contain unique, positive non-zero 
@@ -23,7 +31,7 @@ typedef struct Node Node;
 
 struct Node {
     int     key;
-    int     height;
+    int     balance_factor;
     Node*   left;
     Node*   right;
 };
@@ -47,6 +55,50 @@ Node* createNode(int key)
     return node;
 }
 
+int getHeight(Node* n)
+{
+    if (n == NULL)
+        return 0;
+
+    return 1+max(getHeight(n->left), getHeight(n->right));
+}
+
+Node* left_rotate(Node* n)
+{
+    /* rotate n to the left
+     * n->right will become n's parent
+     * n's old right child's left will become n->right
+     * n's new parent's left child will be n
+     */
+
+    Node* n_new_parent = n->right; /* n's right will be n's new parent */
+    
+    /* n's old right child's left will become n's right child... */
+    n->right = n->right->left;
+    /* ... and n will become the left child of n's new parent */
+    n_new_parent->left = n;
+
+    return n_new_parent;
+}
+
+Node* right_rotate(Node* n)
+{
+    /* rotate n to the right
+     * n->left will become n's parent
+     * n's old left child's right will be n->left
+     * n's new parent's left child will be n
+     */
+
+    Node* n_new_parent = n->left; /* n's left will be n's new parent */
+    
+    /* n's old left child's right will become n's left child... */
+    n->left = n->left->right;
+    /* ... and n will become the right child of n's new parent */
+    n_new_parent->right = n;
+
+    return n_new_parent;
+}
+
 Node* avl_insertion(Node* root, int key)
 {
     if (root == NULL){
@@ -56,10 +108,32 @@ Node* avl_insertion(Node* root, int key)
 
     if (root->key > key)
         root->left = avl_insertion(root->left, key);
-    else if (root->key < key)
+    if (root->key < key)
         root->right = avl_insertion(root->right, key);
 
-    /* Balancing and rotation here */
+    root->balance_factor = getHeight(root->right) - getHeight(root->left);
+
+    /* left-left case*/
+    if (root->balance_factor < -1 && root->left->key > key) {
+        return right_rotate(root);
+    }
+
+    /* right-right case */
+    if (root->balance_factor > 1 && root->right->key < key) { 
+        return left_rotate(root);
+    }
+    
+    /* left-right case */
+    if (root->balance_factor < -1 && root->left->key < key) {
+        right_rotate(root);
+        return left_rotate(root);
+    }
+
+    /* right-left case */
+    if (root->balance_factor > 1 && root->right->key < key) {
+        left_rotate(root);
+        return right_rotate(root);
+    }
 
     return root;
 }
