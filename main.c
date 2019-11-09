@@ -8,20 +8,15 @@
  * algorithm, but we will not go there.
  */
 
-
-// TODO:
-// Deletion
-// Update
-// Check duplicate keys and range of keys
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #define max(x, y) (x >= y ? x : y) /* Expression to get max */
 
 /*
- * This array should only contain unique, positive non-zero 
- * integers.
+ * This array should only contain unique, positive non-zero integers.
+ * The key should also not be greater than 100 so that checking for
+ * duplicates is quick and easy (see sanity_check function below).
  */
 int keys[] = {22, 2, 13, 35, 28, 17, 11, 42, 24, 25};
 
@@ -140,42 +135,49 @@ Node* avl_insertion(Node* root, int key)
     return root;
 }
 
+Node* balance(Node* n)
+{
+    /* Get balance factor of node */
+    int balance_factor = get_balance_factor(n);
+
+    if (balance_factor < -1) {
+        /* Get balance factor of node's left child */
+        int balance_factor_left = get_balance_factor(n->left);
+
+        /* left-left case */
+        if (balance_factor_left <= 0)
+            return right_rotate(n);
+        
+        /* left-right case */
+        if (balance_factor_left > 0) {
+            n->left = left_rotate(n->left);
+            return right_rotate(n);
+        }
+    }
+    if (balance_factor > 1) {
+        /* Get balance factor of node's right child */
+        int balance_factor_right = get_balance_factor(n->right);
+    
+        /* right-right case */
+        if (balance_factor_right >= 0)
+            return left_rotate(n);
+
+        /* right-left case */
+        if (balance_factor_right < 0) {
+            n->right = right_rotate(n->right);
+            return left_rotate(n);
+        }
+    }
+    return n;
+}
+
 Node* replace_and_balance(Node* target, Node* decendent)
 {
-    if (decendent == NULL)
-        return NULL; /* There is no replacement for the target node */
-
     if (decendent->left != NULL) {
         /* This node will have a new left child after balancing */
         decendent->left = replace_and_balance(target, decendent->left);
         
-        int balance_factor = get_balance_factor(decendent);
-        int balance_factor_left = get_balance_factor(decendent->left);
-        int balance_factor_right = get_balance_factor(decendent->right);
-
-        /* left-left case */
-        if (balance_factor < -1 &&
-            balance_factor_left <= 0)
-            return right_rotate(decendent);
-        
-        /* left-right case */
-        if (balance_factor < -1 &&
-            balance_factor_left > 0) {
-            decendent->left = left_rotate(decendent->left);
-            return right_rotate(decendent);
-        }
-
-        /* right-right case */
-        if (balance_factor > 1 &&
-            balance_factor_right >= 0)
-            return left_rotate(decendent);
-
-        /* right-left case */
-        if (balance_factor > 1 &&
-            balance_factor_right < 0) {
-            decendent->right = right_rotate(decendent->right);
-            return left_rotate(decendent);
-        }
+        return balance(decendent);
     }
 
     if (decendent->left == NULL) {
@@ -188,20 +190,71 @@ Node* replace_and_balance(Node* target, Node* decendent)
 }
 
 /* Delete node with key equal argument's key value */
-void avl_delete_node(Node* root, int key)
+Node* avl_delete_node(Node* root, int key)
 {
     if (root->key > key)
-        avl_delete_node(root->left, key);
+        root->left = avl_delete_node(root->left, key); 
     if (root->key < key)
-        avl_delete_node(root->right, key);
+        root->right = avl_delete_node(root->right, key);
     if (root->key == key) {
+        if (root->right == NULL) {
+            /* root does not have a replacement node */
+            Node* save_left = root->left;
+            free(root);
+            return save_left;
+        }
+        /* New right child of target node after rebalancing */
         Node* new_child = replace_and_balance(root, root->right);
-        
+        root->right = new_child;    
     }
+    
+    return balance(root);
+}
+
+Node* update_key(Node* root, int key, int new_key) {
+    /* Will not work if key does not exist and program will crash */
+    root = avl_delete_node(root, key);
+    root = avl_insertion(root, new_key);
+
+    return root;
+}
+
+#define HASH_SIZE 101
+int sanity_check()
+{
+    /* Check for duplicate keys, numbers less than 1 or numbers greater
+     * than 100. Having numbers less than 101 makes it easy to use hash
+     * tables while utilizing less space. 
+     */
+
+    int hash_table[HASH_SIZE]; /* Use hash table to find duplicate keys */
+
+    for (int i = 0; i < keys_length; i++) {
+        if (keys[i] < 1) {
+            printf("Error! Key cannot be less than 1.\n");
+            return 1;
+        }
+        if (keys[i] > 100) {
+            printf("Error! Key cannot be greater than 100.\n");
+            return 1;
+        }
+
+        int hash = keys[i]%HASH_SIZE;
+        if (hash_table[hash] == keys[i]) {
+            printf("Error! Duplicate keys.\n");
+            return 1;
+        }
+        hash_table[hash] = keys[i];
+    }
+
+    return 0;
 }
 
 int main()
 {
+    if (sanity_check() == 1)
+        return 1;
+
     Node* root;
 
     /* Insert for all keys in keys array*/
@@ -210,4 +263,14 @@ int main()
     }
 
     print_tree(root);
+
+    printf("\n/***START DELETION***/\n");
+    for (int i = 0; i < keys_length; i++) {
+        /* Note that root can change so we may need to reassign it */
+        root = avl_delete_node(root, keys[i]);
+        print_tree(root);
+        printf("\n");
+    }
+
+    return 0;
 }
