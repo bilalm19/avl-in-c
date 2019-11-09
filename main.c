@@ -23,7 +23,7 @@
  * This array should only contain unique, positive non-zero 
  * integers.
  */
-int keys[] = {2, 8, 23, 4, 5, 1, 19, 11};
+int keys[] = {22, 2, 13, 35, 28, 17, 11, 42, 24, 25};
 
 int keys_length = sizeof(keys)/sizeof(keys[0]); /* Length of keys array */
 
@@ -31,7 +31,6 @@ typedef struct Node Node;
 
 struct Node {
     int     key;
-    int     balance_factor;
     Node*   left;
     Node*   right;
 };
@@ -99,9 +98,14 @@ Node* right_rotate(Node* n)
     return n_new_parent;
 }
 
+int get_balance_factor(Node* n)
+{
+    return (getHeight(n->right) - getHeight(n->left));
+}
+
 Node* avl_insertion(Node* root, int key)
 {
-    if (root == NULL){
+    if (root == NULL) {
         root = createNode(key);
         return root;
     }
@@ -111,31 +115,89 @@ Node* avl_insertion(Node* root, int key)
     if (root->key < key)
         root->right = avl_insertion(root->right, key);
 
-    root->balance_factor = getHeight(root->right) - getHeight(root->left);
+    int balance_factor = get_balance_factor(root);
 
     /* left-left case*/
-    if (root->balance_factor < -1 && root->left->key > key) {
+    if (balance_factor < -1 && root->left->key > key)
         return right_rotate(root);
-    }
 
     /* right-right case */
-    if (root->balance_factor > 1 && root->right->key < key) { 
+    if (balance_factor > 1 && root->right->key < key) 
         return left_rotate(root);
-    }
     
     /* left-right case */
-    if (root->balance_factor < -1 && root->left->key < key) {
-        right_rotate(root);
-        return left_rotate(root);
+    if (balance_factor < -1 && root->left->key < key) {
+        root->left = left_rotate(root->left);
+        return right_rotate(root);
     }
 
     /* right-left case */
-    if (root->balance_factor > 1 && root->right->key < key) {
-        left_rotate(root);
-        return right_rotate(root);
+    if (balance_factor > 1 && root->right->key > key) {
+        root->right = right_rotate(root->right);
+        return left_rotate(root);
     }
 
     return root;
+}
+
+Node* replace_and_balance(Node* target, Node* decendent)
+{
+    if (decendent == NULL)
+        return NULL; /* There is no replacement for the target node */
+
+    if (decendent->left != NULL) {
+        /* This node will have a new left child after balancing */
+        decendent->left = replace_and_balance(target, decendent->left);
+        
+        int balance_factor = get_balance_factor(decendent);
+        int balance_factor_left = get_balance_factor(decendent->left);
+        int balance_factor_right = get_balance_factor(decendent->right);
+
+        /* left-left case */
+        if (balance_factor < -1 &&
+            balance_factor_left <= 0)
+            return right_rotate(decendent);
+        
+        /* left-right case */
+        if (balance_factor < -1 &&
+            balance_factor_left > 0) {
+            decendent->left = left_rotate(decendent->left);
+            return right_rotate(decendent);
+        }
+
+        /* right-right case */
+        if (balance_factor > 1 &&
+            balance_factor_right >= 0)
+            return left_rotate(decendent);
+
+        /* right-left case */
+        if (balance_factor > 1 &&
+            balance_factor_right < 0) {
+            decendent->right = right_rotate(decendent->right);
+            return left_rotate(decendent);
+        }
+    }
+
+    if (decendent->left == NULL) {
+        /* decendent is the replacement node and will be removed */
+        target->key = decendent->key;
+        Node* right_child = decendent->right;
+        free(decendent);
+        return right_child;
+    }
+}
+
+/* Delete node with key equal argument's key value */
+void avl_delete_node(Node* root, int key)
+{
+    if (root->key > key)
+        avl_delete_node(root->left, key);
+    if (root->key < key)
+        avl_delete_node(root->right, key);
+    if (root->key == key) {
+        Node* new_child = replace_and_balance(root, root->right);
+        
+    }
 }
 
 int main()
