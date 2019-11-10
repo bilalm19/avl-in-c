@@ -42,19 +42,19 @@ void print_tree(Node* root)
     print_tree(root->right);
 }
 
-Node* createNode(int key)
+Node* create_node(int key)
 {
     Node* node = malloc(sizeof(Node));
     node->key = key;
     return node;
 }
 
-int getHeight(Node* n)
+int get_height(Node* n)
 {
     if (n == NULL)
         return 0;
 
-    return 1+max(getHeight(n->left), getHeight(n->right));
+    return 1+max(get_height(n->left), get_height(n->right));
 }
 
 Node* left_rotate(Node* n)
@@ -97,13 +97,13 @@ Node* right_rotate(Node* n)
 
 int get_balance_factor(Node* n)
 {
-    return (getHeight(n->right) - getHeight(n->left));
+    return (get_height(n->right) - get_height(n->left));
 }
 
 Node* avl_insertion(Node* root, int key)
 {
     if (root == NULL) {
-        root = createNode(key);
+        root = create_node(key);
         return root;
     }
 
