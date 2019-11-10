@@ -191,7 +191,9 @@ Node* replace_and_balance(Node* target, Node* decendent)
     }
 }
 
-/* Delete node with key equal argument's key value */
+/* 
+ * Delete node with key equal argument's key value
+ */
 Node* avl_delete_node(Node* root, int key)
 {
     if (root->key > key)
