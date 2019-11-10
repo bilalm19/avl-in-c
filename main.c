@@ -59,7 +59,8 @@ int getHeight(Node* n)
 
 Node* left_rotate(Node* n)
 {
-    /* rotate n to the left
+    /* 
+     * rotate n to the left
      * n->right will become n's parent
      * n's old right child's left will become n->right
      * n's new parent's left child will be n
@@ -77,7 +78,8 @@ Node* left_rotate(Node* n)
 
 Node* right_rotate(Node* n)
 {
-    /* rotate n to the right
+    /* 
+     * rotate n to the right
      * n->left will become n's parent
      * n's old left child's right will be n->left
      * n's new parent's left child will be n
@@ -222,7 +224,8 @@ Node* update_key(Node* root, int key, int new_key) {
 #define HASH_SIZE 101
 int sanity_check()
 {
-    /* Check for duplicate keys, numbers less than 1 or numbers greater
+    /* 
+     * Check for duplicate keys, numbers less than 1 or numbers greater
      * than 100. Having numbers less than 101 makes it easy to use hash
      * tables while utilizing less space. 
      */
